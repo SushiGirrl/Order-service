@@ -5,8 +5,8 @@ import os
 
 app = Flask(__name__)
 
-# Get the database path from an environment variable, or use default
-DATABASE_DIR = os.path.join('C:', 'Users', 'Lykke', 'Documents', 'KEA', '3_Semester')
+# Get the database path from an environment variable, or use a default path
+DATABASE_DIR = os.environ.get('DATABASE_DIR', '/app')
 DATABASE_PATH = os.path.join(DATABASE_DIR, 'orders.db')
 
 # Ensure that the 'orders_data' directory exists
