@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify
 import sqlite3
 from datetime import datetime
 import os
+import requests
 
 app = Flask(__name__)
 
@@ -54,12 +55,28 @@ def create_order():
     order_id = cur.lastrowid
     conn.close()
 
+    # Assume price is passed in the request for simplicity (you can fetch it from Product Service if needed)
+    amount = data.get('amount')
+
+    # Call Payment Service to create a new payment
+    payment_service_url = os.environ.get('PAYMENT_SERVICE_URL', 'http://localhost:5001')  # Use environment variable for Payment Service URL
+    payment_data = {
+        'order_id': order_id,
+        'amount': amount
+    }
+    payment_response = requests.post(f'{payment_service_url}/payments', json=payment_data)
+
+    if payment_response.status_code != 201:
+        # If Payment Service fails, return an error
+        return jsonify({"error": "Failed to create payment for the order"}), 500
+
     return jsonify({
         'order_id': order_id,
         'product_id': data['product_id'],
         'quantity': data['quantity'],
         'status': 'created',
-        'created_at': datetime.utcnow().isoformat()
+        'created_at': datetime.utcnow().isoformat(),
+        'payment_status': payment_response.json().get('status', 'unknown')
     }), 201
 
 # Get details of a specific order
